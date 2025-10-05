@@ -7,6 +7,7 @@ from explosion import Explosion
 from avion import Avion, Avion_IAE
 from power_up import PowerUp
 from game_over import mostrar_game_over
+from chipa import Chipa
 
 pygame.init()
 pygame.display.set_caption("EL EXTERMINADOR")
@@ -19,6 +20,8 @@ fondo = pygame.image.load("imagenes/fondo_nivel_1.png").convert()
 fondo = pygame.transform.scale(fondo,screen.get_size())
 
 def game():
+    score = 1000
+    nivel_actual = 1
     jugador = Jugador(screen_rect= screen.get_rect())
 
     grupo_jugador = pygame.sprite.GroupSingle()
@@ -26,6 +29,7 @@ def game():
 
     grupo_mosquito = pygame.sprite.Group()
     grupo_power_up = pygame.sprite.Group()
+    grupo_chipa = pygame.sprite.Group()
 
     # Evento que se dispara cada 2 segundo
     spaw_mosquito_time = 2000
@@ -51,6 +55,9 @@ def game():
     SPAWN_POWER_UP = pygame.USEREVENT + 6
     pygame.time.set_timer(SPAWN_POWER_UP,20000)
 
+    SPAWN_CHIPA = pygame.USEREVENT + 7
+    pygame.time.set_timer(SPAWN_POWER_UP,20000)
+
 
     def dibujar_vidas(surface, vidas):
         fuente = pygame.font.SysFont(None, 28)
@@ -66,9 +73,6 @@ def game():
         fuente = pygame.font.SysFont(None, 28)
         txt = fuente.render(f"Nivel: {nivel}", True, (235,235,235))
         surface.blit(txt, (10, 50))
-
-    score = 1000
-    nivel_actual = 1
 
     running = True
     while running:
@@ -86,6 +90,8 @@ def game():
             elif event.type ==  SPAWN_AVION:
                 avion = Avion()
                 grupo_avion.add(avion)
+                chipa = Chipa()
+                grupo_chipa.add(chipa)
             elif event.type == SPAWN_AVION_IAE:
                 avion = Avion_IAE()
                 grupo_avion.add(avion)
@@ -108,6 +114,7 @@ def game():
         grupo_explosion.update()
         grupo_avion.update()
         grupo_power_up.update()
+        grupo_chipa.update()
 
 
         #Detecta colision
@@ -123,11 +130,15 @@ def game():
         if j:
             hit = pygame.sprite.spritecollide(j, grupo_mosquito, True, collided=pygame.sprite.collide_mask) 
             hit_power_up = pygame.sprite.spritecollide(j, grupo_power_up, True, collided=pygame.sprite.collide_mask) 
+            hit_chipa = pygame.sprite.spritecollide(j, grupo_chipa, True, collided=pygame.sprite.collide_mask) 
             if hit and not j.esta_invensible():
                 j.recibir_daño()
             elif hit_power_up:
                 j.laser_delay -= 50
                 print("delay reducido", j.laser_delay)
+            elif hit_chipa:
+                j.vidas += 1
+                print("vida aumentada a:", j.vidas)
 
         if j and j.vidas <= 0 or score <= 0:
             choise = mostrar_game_over(screen,fondo,j)
@@ -155,6 +166,7 @@ def game():
         grupo_power_up.draw(screen)
         grupo_mosquito.draw(screen)
         grupo_explosion.draw(screen)
+        grupo_chipa.draw(screen)
 
         if j:
             dibujar_vidas(screen,j.vidas)
