@@ -17,7 +17,7 @@ class Jugador(pygame.sprite.Sprite):
         self.lasers_group = pygame.sprite.Group()
         self.laser_ready = True
         self.laser_time = 0
-        self.laser_delay = 800
+        self.laser_delay = 500
         self.vidas = 3
         self.inv_hasta = 0 
 

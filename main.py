@@ -5,6 +5,7 @@ from player import Jugador, Laser
 from mosquito import Mosquito
 from explosion import Explosion
 from avion import Avion, Avion_IAE
+from power_up import PowerUp
 
 
 pygame.init()
@@ -23,6 +24,7 @@ grupo_jugador = pygame.sprite.GroupSingle()
 grupo_jugador.add(jugador)
 
 grupo_mosquito = pygame.sprite.Group()
+grupo_power_up = pygame.sprite.Group()
 
 # Evento que se dispara cada 2 segundo
 spaw_mosquito_time = 2000
@@ -42,6 +44,12 @@ pygame.time.set_timer(SPAWN_AVION,10000)
 SPAWN_AVION_IAE = pygame.USEREVENT + 3
 pygame.time.set_timer(SPAWN_AVION_IAE,16000)
 
+SUBIR_NIVEL = pygame.USEREVENT + 5
+pygame.time.set_timer(SUBIR_NIVEL,10000)
+
+SPAWN_POWER_UP = pygame.USEREVENT + 6
+pygame.time.set_timer(SPAWN_POWER_UP,20000)
+
 
 def dibujar_vidas(surface, vidas):
     fuente = pygame.font.SysFont(None, 28)
@@ -53,9 +61,18 @@ def dibujar_score(surface, score):
     txt = fuente.render(f"Score: {score}", True, (235,235,235))
     surface.blit(txt, (10, 30))
 
+def dibujar_nivel(surface, nivel):
+    fuente = pygame.font.SysFont(None, 28)
+    txt = fuente.render(f"Nivel: {nivel}", True, (235,235,235))
+    surface.blit(txt, (10, 50))
+
+
+
 score = 1000
+nivel_actual = 1
 
 while running:
+    j = grupo_jugador.sprite
 
     for event in pygame.event.get():
         #print(event)
@@ -63,9 +80,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == SPAWN_MOSQUITO:
-            mosquito = Mosquito()
-            mosquito_2 = Mosquito()
-            grupo_mosquito.add(mosquito,mosquito_2)
+            for nivel in range(nivel_actual):
+                mosquito = Mosquito()
+                grupo_mosquito.add(mosquito)
         elif event.type ==  SPAWN_AVION:
             avion = Avion()
             grupo_avion.add(avion)
@@ -78,6 +95,13 @@ while running:
             else:
                 spaw_mosquito_time = 1500
             print(spaw_mosquito_time)
+        elif event.type == SUBIR_NIVEL:
+            nivel_actual += 1
+        elif event.type == SPAWN_POWER_UP:
+            power_up = PowerUp()
+            grupo_power_up.add(power_up)
+
+
 
 
     #Updating
@@ -85,22 +109,28 @@ while running:
     grupo_mosquito.update()
     grupo_explosion.update()
     grupo_avion.update()
+    grupo_power_up.update()
 
 
     #Detecta colision
     hits = pygame.sprite.groupcollide(grupo_jugador.sprite.lasers_group,grupo_mosquito, True,True)
     for _,enemigos_tocados in hits.items():
         for enemigo in enemigos_tocados:
+            score += 25
             grupo_explosion.add(Explosion(
                 enemigo.rect.center,
                 size=(100,100)
             ))
     
-    j = grupo_jugador.sprite
     if j:
-        hit = pygame.sprite.spritecollide(j, grupo_mosquito, True, collided=pygame.sprite.collide_mask)
+        hit = pygame.sprite.spritecollide(j, grupo_mosquito, True, collided=pygame.sprite.collide_mask) 
+        hit_power_up = pygame.sprite.spritecollide(j, grupo_power_up, True, collided=pygame.sprite.collide_mask) 
         if hit and not j.esta_invensible():
             j.recibir_daño()
+        elif hit_power_up:
+            j.laser_delay -= 50
+            print("delay reducido", j.laser_delay)
+
     if j and j.vidas <= 0 or score <= 0:
         running = False
 
@@ -120,12 +150,14 @@ while running:
 
     grupo_jugador.sprite.lasers_group.draw(screen)
     grupo_avion.draw(screen)
+    grupo_power_up.draw(screen)
     grupo_mosquito.draw(screen)
     grupo_explosion.draw(screen)
 
     if j:
         dibujar_vidas(screen,j.vidas)
         dibujar_score(screen,score)
+        dibujar_nivel(screen,nivel_actual)
 
 
     pygame.display.flip()
