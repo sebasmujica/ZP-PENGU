@@ -4,7 +4,7 @@ from config import*
 from laser import Laser  # Importing Laser from laser.py
 VEL_JUG = 20
 COOLDOWN = 300
-INVENCIBLE = 1200
+INVENCIBLE = 1000
 
 class Jugador(pygame.sprite.Sprite):
     def __init__(self, screen_rect: pygame.Rect, *groups) -> None:
@@ -18,6 +18,8 @@ class Jugador(pygame.sprite.Sprite):
         self.laser_ready = True
         self.laser_time = 0
         self.laser_delay = 800
+        self.vidas = 3
+        self.inv_hasta = 0 
 
     def get_user_input(self):
         keys = pygame.key.get_pressed()
@@ -40,3 +42,12 @@ class Jugador(pygame.sprite.Sprite):
             current_time = pygame.time.get_ticks()
             if current_time - self.laser_time >= self.laser_delay:
                 self.laser_ready = True
+
+    def recibir_daño(self):
+        ahora = pygame.time.get_ticks()
+        if ahora >= self.inv_hasta:
+            self.vidas -= 1
+            self.inv_hasta = ahora + INVENCIBLE
+
+    def esta_invensible(self):
+        return pygame.time.get_ticks()< self.inv_hasta

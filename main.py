@@ -19,8 +19,8 @@ fondo = pygame.transform.scale(fondo,screen.get_size())
 
 jugador = Jugador(screen_rect= screen.get_rect())
 
-todos = pygame.sprite.GroupSingle()
-todos.add(jugador)
+grupo_jugador = pygame.sprite.GroupSingle()
+grupo_jugador.add(jugador)
 
 grupo_mosquito = pygame.sprite.Group()
 
@@ -37,6 +37,12 @@ pygame.time.set_timer(SPAWN_AVION,10000)
 
 SPAWN_AVION_IAE = pygame.USEREVENT + 3
 pygame.time.set_timer(SPAWN_AVION_IAE,16000)
+
+
+def dibujar_vidas(surface, vidas):
+    fuente = pygame.font.SysFont(None, 28)
+    txt = fuente.render(f"Vidas: {vidas}", True, (235, 235, 235))
+    surface.blit(txt, (10, 10))
 
 while running:
 
@@ -57,29 +63,46 @@ while running:
 
 
     #Updating
-    todos.update()
+    grupo_jugador.update()
     grupo_mosquito.update()
     grupo_explosion.update()
     grupo_avion.update()
 
 
     #Detecta colision
-    hits = pygame.sprite.groupcollide(todos.sprite.lasers_group,grupo_mosquito, True,True)
+    hits = pygame.sprite.groupcollide(grupo_jugador.sprite.lasers_group,grupo_mosquito, True,True)
     for _,enemigos_tocados in hits.items():
         for enemigo in enemigos_tocados:
             grupo_explosion.add(Explosion(
                 enemigo.rect.center,
                 size=(100,100)
             ))
+    
+    j = grupo_jugador.sprite
+    if j:
+        hit = pygame.sprite.spritecollide(j, grupo_mosquito, True, collided=pygame.sprite.collide_mask)
+        if hit and not j.esta_invensible():
+            j.recibir_daño()
+    if j and j.vidas <= 0:
+        running = False
 
 
     #Dibujar
     screen.blit(fondo,(0,0))
-    todos.draw(screen)
-    todos.sprite.lasers_group.draw(screen)
+
+    if j and j.esta_invensible():
+        if(pygame.time.get_ticks() // 100)%2 == 0:
+            grupo_jugador.draw(screen)
+    else:
+        grupo_jugador.draw(screen)
+
+    grupo_jugador.sprite.lasers_group.draw(screen)
     grupo_avion.draw(screen)
     grupo_mosquito.draw(screen)
     grupo_explosion.draw(screen)
+
+    if j:
+        dibujar_vidas(screen,j.vidas)
 
 
     pygame.display.flip()
