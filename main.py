@@ -4,7 +4,7 @@ from config import*
 from player import Jugador, Laser
 from mosquito import Mosquito
 from explosion import Explosion
-from avion import Avion
+from avion import Avion, Avion_IAE
 
 
 pygame.init()
@@ -35,6 +35,9 @@ grupo_avion = pygame.sprite.Group()
 SPAWN_AVION = pygame.USEREVENT + 2
 pygame.time.set_timer(SPAWN_AVION,10000)
 
+SPAWN_AVION_IAE = pygame.USEREVENT + 3
+pygame.time.set_timer(SPAWN_AVION_IAE,16000)
+
 while running:
 
     for event in pygame.event.get():
@@ -47,6 +50,9 @@ while running:
             grupo_mosquito.add(mosquito)
         elif event.type ==  SPAWN_AVION:
             avion = Avion()
+            grupo_avion.add(avion)
+        elif event.type == SPAWN_AVION_IAE:
+            avion = Avion_IAE()
             grupo_avion.add(avion)
 
 
