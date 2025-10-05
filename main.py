@@ -25,8 +25,12 @@ grupo_jugador.add(jugador)
 grupo_mosquito = pygame.sprite.Group()
 
 # Evento que se dispara cada 2 segundo
+spaw_mosquito_time = 2000
 SPAWN_MOSQUITO = pygame.USEREVENT + 1 #EL +1 es para darle un ID unico al evento
-pygame.time.set_timer(SPAWN_MOSQUITO, 2000)
+pygame.time.set_timer(SPAWN_MOSQUITO, spaw_mosquito_time)
+
+AUMENTAR_SPAWN_TIME = pygame.USEREVENT + 4
+pygame.time.set_timer(AUMENTAR_SPAWN_TIME,15000)
 
 grupo_explosion = pygame.sprite.Group()
 
@@ -44,6 +48,13 @@ def dibujar_vidas(surface, vidas):
     txt = fuente.render(f"Vidas: {vidas}", True, (235, 235, 235))
     surface.blit(txt, (10, 10))
 
+def dibujar_score(surface, score):
+    fuente = pygame.font.SysFont(None, 28)
+    txt = fuente.render(f"Score: {score}", True, (235,235,235))
+    surface.blit(txt, (10, 30))
+
+score = 1000
+
 while running:
 
     for event in pygame.event.get():
@@ -53,13 +64,20 @@ while running:
             running = False
         elif event.type == SPAWN_MOSQUITO:
             mosquito = Mosquito()
-            grupo_mosquito.add(mosquito)
+            mosquito_2 = Mosquito()
+            grupo_mosquito.add(mosquito,mosquito_2)
         elif event.type ==  SPAWN_AVION:
             avion = Avion()
             grupo_avion.add(avion)
         elif event.type == SPAWN_AVION_IAE:
             avion = Avion_IAE()
             grupo_avion.add(avion)
+        elif event.type == AUMENTAR_SPAWN_TIME:
+            if spaw_mosquito_time > 0:
+                spaw_mosquito_time -= 200
+            else:
+                spaw_mosquito_time = 1500
+            print(spaw_mosquito_time)
 
 
     #Updating
@@ -83,9 +101,13 @@ while running:
         hit = pygame.sprite.spritecollide(j, grupo_mosquito, True, collided=pygame.sprite.collide_mask)
         if hit and not j.esta_invensible():
             j.recibir_daño()
-    if j and j.vidas <= 0:
+    if j and j.vidas <= 0 or score <= 0:
         running = False
 
+    for mosquito in grupo_mosquito:
+        if mosquito.rect.top > ALTO_PANTALLA:
+            score -= 50
+            mosquito.kill()
 
     #Dibujar
     screen.blit(fondo,(0,0))
@@ -103,6 +125,7 @@ while running:
 
     if j:
         dibujar_vidas(screen,j.vidas)
+        dibujar_score(screen,score)
 
 
     pygame.display.flip()
